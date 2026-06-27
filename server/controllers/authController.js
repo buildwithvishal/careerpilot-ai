@@ -1,5 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { analyzeResumeWithGemini } from "../services/geminiService.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -23,7 +25,7 @@ export const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    await User.create({
       name,
       email,
       password: hashedPassword,
@@ -70,9 +72,41 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const analyzeResume = async (req, res) => {
+  try {
+    const { resumeText } = req.body;
+
+    if (!resumeText) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume text is required",
+      });
+    }
+
+    const analysis = await analyzeResumeWithGemini(resumeText);
+
+    res.status(200).json({
+      success: true,
+      analysis,
     });
   } catch (error) {
     res.status(500).json({
