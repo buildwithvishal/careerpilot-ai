@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import ResumeAnalysis from "../models/ResumeAnalysis.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { analyzeResumeWithGemini } from "../services/geminiService.js";
@@ -104,9 +105,31 @@ export const analyzeResume = async (req, res) => {
 
     const analysis = await analyzeResumeWithGemini(resumeText);
 
+    await ResumeAnalysis.create({
+      resumeText,
+      analysis,
+    });
+
     res.status(200).json({
       success: true,
       analysis,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAnalysisHistory = async (req, res) => {
+  try {
+    const history = await ResumeAnalysis.find()
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      history,
     });
   } catch (error) {
     res.status(500).json({

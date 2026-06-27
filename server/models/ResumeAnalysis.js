@@ -1,0 +1,25 @@
+import mongoose from "mongoose";
+
+const resumeAnalysisSchema = new mongoose.Schema(
+  {
+    resumeText: {
+      type: String,
+      required: true,
+    },
+
+    analysis: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const ResumeAnalysis = mongoose.model(
+  "ResumeAnalysis",
+  resumeAnalysisSchema
+);
+
+export default ResumeAnalysis;
