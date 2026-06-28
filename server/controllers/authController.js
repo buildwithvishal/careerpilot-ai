@@ -3,6 +3,7 @@ import ResumeAnalysis from "../models/ResumeAnalysis.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { analyzeResumeWithGemini } from "../services/geminiService.js";
+import pdf from "pdf-parse-fork";
 
 export const registerUser = async (req, res) => {
   try {
@@ -103,7 +104,12 @@ export const analyzeResume = async (req, res) => {
       });
     }
 
-    const analysis = await analyzeResumeWithGemini(resumeText);
+    const analysisText =
+    await analyzeResumeWithGemini(resumeText);
+
+    const analysis = JSON.parse(
+      analysisText.replace(/```json|```/g, "").trim()
+    );
 
     await ResumeAnalysis.create({
       resumeText,
@@ -111,9 +117,9 @@ export const analyzeResume = async (req, res) => {
     });
 
     res.status(200).json({
-      success: true,
-      analysis,
-    });
+    success: true,
+    analysis,
+});
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -132,6 +138,45 @@ export const getAnalysisHistory = async (req, res) => {
       history,
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const analyzeResumePDF = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "PDF file is required",
+      });
+    }
+
+    const data = await pdf(req.file.buffer);
+
+    const resumeText = data.text;
+
+    const analysisText =
+      await analyzeResumeWithGemini(resumeText);
+
+    const analysis = JSON.parse(
+      analysisText.replace(/```json|```/g, "").trim()
+    );
+
+    await ResumeAnalysis.create({
+      resumeText,
+      analysis,
+    });
+
+    res.status(200).json({
+      success: true,
+      analysis,
+    });
+  } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       success: false,
       message: error.message,

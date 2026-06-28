@@ -8,37 +8,21 @@ export const analyzeResumeWithGemini = async (resumeText) => {
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: `
-You are a professional ATS Resume Analyzer and Career Coach.
+You are a professional ATS Resume Analyzer.
 
-Analyze the following resume and provide the output in EXACTLY this format:
+Analyze the resume and return ONLY valid JSON.
 
-ATS SCORE: <score out of 100>
+Format:
 
-STRENGTHS:
-- Point 1
-- Point 2
-- Point 3
-
-WEAKNESSES:
-- Point 1
-- Point 2
-- Point 3
-
-IMPROVEMENT SUGGESTIONS:
-- Point 1
-- Point 2
-- Point 3
-
-MISSING KEYWORDS:
-- Keyword 1
-- Keyword 2
-- Keyword 3
-
-FINAL VERDICT:
-<Short overall evaluation>
+{
+  "atsScore": 0,
+  "strengths": [],
+  "weaknesses": [],
+  "suggestions": [],
+  "keywords": []
+}
 
 Resume:
-
 ${resumeText}
 `,
   });

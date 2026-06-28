@@ -8,7 +8,7 @@ const resumeAnalysisSchema = new mongoose.Schema(
     },
 
     analysis: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
   },

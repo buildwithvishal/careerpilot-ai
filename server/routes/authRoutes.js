@@ -1,4 +1,7 @@
 import express from "express";
+import upload from "../middleware/uploadMiddleware.js";
+import { analyzeResumePDF } from "../controllers/authController.js";
+
 import {
   registerUser,
   loginUser,
@@ -12,5 +15,11 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/analyze-resume", analyzeResume);
 router.get("/analysis-history", getAnalysisHistory);
+
+router.post(
+  "/analyze-pdf",
+  upload.single("resume"),
+  analyzeResumePDF
+);
 
 export default router;
