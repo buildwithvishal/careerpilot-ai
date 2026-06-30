@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import {
+  CircularProgressbar,
+  buildStyles,
+} from "react-circular-progressbar";
+
+import "react-circular-progressbar/dist/styles.css";
 
 function Dashboard() {
   const [resumeText, setResumeText] = useState("");
@@ -8,7 +14,19 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
   const [history, setHistory] = useState([]);
+  const [inputType, setInputType] = useState("text");
   const navigate = useNavigate();
+
+  const user = JSON.parse(
+    localStorage.getItem("user")
+    );
+
+    const getScoreColor = (score) => {
+    if (score < 40) return "#d33939";
+    if (score < 70) return "#eab308";
+    return "#21ae55"; 
+    };
+  
 
   const handleAnalyze = async () => {
     try {
@@ -107,7 +125,7 @@ function Dashboard() {
 
             <div className="flex items-center gap-4">
                 <span className="text-lg font-medium">
-                Hi, Vishal  
+                  Hi, {user?.name}
                 </span>
 
                 <button
@@ -124,16 +142,46 @@ function Dashboard() {
         </p>
 
         <div className="bg-slate-900 rounded-2xl p-6 shadow-xl">
-          <textarea
-            placeholder="Paste your resume here..."
-            value={resumeText}
-            onChange={(e) => setResumeText(e.target.value)}
-            className="w-full h-72 bg-slate-800 rounded-xl p-4 text-white outline-none border border-slate-700"
-          />
 
-          <div className="mt-5">
-            <label className="cursor-pointer inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-5 py-3 rounded-xl font-medium transition">
-              📄 Upload Resume PDF
+            <p className="text-slate-400 mb-3">
+                Choose Input Method
+            </p>
+
+        <div className="flex w-fit mb-5 bg-slate-800 rounded-xl p-1">
+            <button
+                onClick={() => setInputType("text")}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    inputType === "text"
+                        ? "bg-blue-600 text-white"
+                        : "text-slate-400"
+                }`}
+            >
+                Paste Resume
+            </button>
+
+            <button
+                onClick={() => setInputType("pdf")}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    inputType === "pdf"
+                        ? "bg-blue-600 text-white"
+                        : "text-slate-400"
+                }`}
+            >
+                Upload PDF
+            </button>
+            </div>
+          {inputType === "text" && (
+            <textarea
+                placeholder="Paste your resume here..."
+                value={resumeText}
+                onChange={(e) => setResumeText(e.target.value)}
+                className="w-full h-72 bg-slate-800 rounded-xl p-4 text-white outline-none border border-slate-700"
+        />
+        )}
+            {inputType === "pdf" && (
+                    <div className="mt-5">
+                        <label className="cursor-pointer inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-5 py-3 rounded-xl font-medium transition">
+                        📄 Upload Resume PDF
 
               <input
                 type="file"
@@ -153,44 +201,59 @@ function Dashboard() {
               </p>
             )}
           </div>
+          )}
 
           <div className="flex gap-4 mt-6 flex-wrap">
-            <button
-              onClick={handleAnalyze}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold transition"
-            >
-              {loading ? "Analyzing..." : "Analyze Resume"}
-            </button>
+
+            {inputType === "text" && (
+                <button
+                onClick={handleAnalyze}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold transition"
+                >
+                {loading ? "Analyzing..." : "Analyze Resume"}
+                </button>
+            )}
+
+            {inputType === "pdf" && (
+                <button
+                onClick={handlePDFAnalyze}
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-semibold transition"
+                >
+                Analyze PDF
+                </button>
+            )}
 
             <button
-              onClick={handlePDFAnalyze}
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-semibold transition"
+                onClick={fetchHistory}
+                className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-xl font-semibold transition"
             >
-              Analyze PDF
+                View History
             </button>
 
-            <button
-              onClick={fetchHistory}
-              className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-xl font-semibold transition"
-            >
-              View History
-            </button>
-          </div>
-        </div>
+            </div>
+            </div>
 
         {analysis && (
           <div className="mt-8 grid gap-6">
-            <div className="bg-slate-900 p-6 rounded-2xl shadow-xl">
-              <h2 className="text-2xl font-bold mb-2">
-                ATS Score
-              </h2>
+            <div className="bg-slate-900 p-6 rounded-2xl shadow-xl flex flex-col items-center">
+                <h2 className="text-2xl font-bold mb-6">
+                    ATS Score
+                </h2>
 
-              <p className="text-6xl font-extrabold text-green-400">
-                {analysis.atsScore}/100
-              </p>
-            </div>
+                <div className="w-40 h-40">
+                    <CircularProgressbar
+                    value={analysis.atsScore}
+                    text={`${analysis.atsScore}%`}
+                    styles={buildStyles({
+                        textColor: getScoreColor(analysis.atsScore),
+                        pathColor: getScoreColor(analysis.atsScore),
+                        trailColor: "#1e293b",
+                    })}
+                    />
+                </div>
+                </div>
 
             <div className="bg-slate-900 p-6 rounded-2xl shadow-xl">
               <h2 className="text-2xl font-bold mb-4">
