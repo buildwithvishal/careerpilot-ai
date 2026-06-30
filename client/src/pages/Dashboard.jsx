@@ -14,13 +14,15 @@ function Dashboard() {
     try {
       setLoading(true);
 
-      const user = JSON.parse(
-        localStorage.getItem("user")
-    );
-
-      const { data } = await API.post("/auth/analyze-resume", {
-        resumeText,
-      });
+      const { data } = await API.post(
+        "/auth/analyze-resume",
+        { resumeText },
+        {
+            headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        }
+       );
 
       setAnalysis(data.analysis);
     } catch (error) {
@@ -50,7 +52,8 @@ function Dashboard() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-          },
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         }
       );
 
@@ -73,7 +76,14 @@ function Dashboard() {
 
   const fetchHistory = async () => {
     try {
-      const { data } = await API.get("/auth/analysis-history");
+      const { data } = await API.get(
+        "/auth/analysis-history",
+        {
+            headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        }
+        );
       setHistory(data.history);
     } catch (error) {
       console.error(error);

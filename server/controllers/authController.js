@@ -117,6 +117,7 @@ export const analyzeResume = async (req, res) => {
     );
 
     await ResumeAnalysis.create({
+      user: req.user.userId,
       resumeText,
       analysis,
     });
@@ -135,8 +136,9 @@ export const analyzeResume = async (req, res) => {
 
 export const getAnalysisHistory = async (req, res) => {
   try {
-    const history = await ResumeAnalysis.find()
-      .sort({ createdAt: -1 });
+    const history = await ResumeAnalysis.find({
+      user: req.user.userId,
+    }).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -171,6 +173,7 @@ export const analyzeResumePDF = async (req, res) => {
     );
 
     await ResumeAnalysis.create({
+      user: req.user.userId,
       resumeText,
       analysis,
     });

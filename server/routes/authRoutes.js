@@ -1,6 +1,7 @@
 import express from "express";
 import upload from "../middleware/uploadMiddleware.js";
 import { analyzeResumePDF } from "../controllers/authController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 import {
   registerUser,
@@ -13,11 +14,21 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/analyze-resume", analyzeResume);
-router.get("/analysis-history", getAnalysisHistory);
+router.post(
+  "/analyze-resume",
+  authMiddleware,
+  analyzeResume
+);
+
+router.get(
+  "/analysis-history",
+  authMiddleware,
+  getAnalysisHistory
+);
 
 router.post(
   "/analyze-pdf",
+  authMiddleware,
   upload.single("resume"),
   analyzeResumePDF
 );
