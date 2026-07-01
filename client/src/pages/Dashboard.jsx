@@ -15,6 +15,7 @@ function Dashboard() {
   const [resumeFile, setResumeFile] = useState(null);
   const [history, setHistory] = useState([]);
   const [inputType, setInputType] = useState("text");
+  const [targetRole, setTargetRole] = useState("Software Engineer");
   const navigate = useNavigate();
 
   const user = JSON.parse(
@@ -26,21 +27,41 @@ function Dashboard() {
     if (score < 70) return "#eab308";
     return "#21ae55"; 
     };
+
+    const getScoreLabel = (score) => {
+    if (score < 40) return "Needs Improvement";
+    if (score < 70) return "Average";
+    if (score < 85) return "Good";
+    return "Excellent";
+    };
+
+    const getRoleFitColor = (fit) => {
+    if (fit === "High") return "#22c55e";
+    if (fit === "Medium") return "#eab308";
+    return "#ef4444";
+    };
   
 
   const handleAnalyze = async () => {
+    if (!resumeText.trim()) {
+    alert("Please paste your resume");
+    return;
+  }
     try {
       setLoading(true);
 
       const { data } = await API.post(
         "/auth/analyze-resume",
-        { resumeText },
+        {
+            resumeText,
+            targetRole,
+        },
         {
             headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
         }
-       );
+        );
 
       setAnalysis(data.analysis);
     } catch (error) {
@@ -52,7 +73,7 @@ function Dashboard() {
     }
   };
 
-  const handlePDFAnalyze = async () => {
+  const handleAnalyzePdf = async () => {
     try {
       if (!resumeFile) {
         alert("Please select a PDF");
@@ -141,54 +162,75 @@ function Dashboard() {
           AI Powered Resume Analyzer & ATS Score Checker
         </p>
 
-        <div className="bg-slate-900 rounded-2xl p-6 shadow-xl">
+<div className="bg-slate-900 rounded-2xl p-6 shadow-xl">
 
-            <p className="text-slate-400 mb-3">
-                Choose Input Method
-            </p>
+    <p className="text-slate-400 mb-3">
+        Choose Input Method
+    </p>
 
-        <div className="flex w-fit mb-5 bg-slate-800 rounded-xl p-1">
-            <button
-                onClick={() => setInputType("text")}
-                className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                    inputType === "text"
-                        ? "bg-blue-600 text-white"
-                        : "text-slate-400"
-                }`}
-            >
-                Paste Resume
-            </button>
+    <div className="flex w-fit mb-5 bg-slate-800 rounded-xl p-1">
+        <button
+            onClick={() => setInputType("text")}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                inputType === "text"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-400"
+            }`}
+        >
+            Paste Resume
+        </button>
 
-            <button
-                onClick={() => setInputType("pdf")}
-                className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                    inputType === "pdf"
-                        ? "bg-blue-600 text-white"
-                        : "text-slate-400"
-                }`}
-            >
-                Upload PDF
-            </button>
-            </div>
-          {inputType === "text" && (
-            <textarea
-                placeholder="Paste your resume here..."
-                value={resumeText}
-                onChange={(e) => setResumeText(e.target.value)}
-                className="w-full h-72 bg-slate-800 rounded-xl p-4 text-white outline-none border border-slate-700"
+        <button
+            onClick={() => setInputType("pdf")}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                inputType === "pdf"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-400"
+            }`}
+        >
+            Upload PDF
+        </button>
+    </div>
+
+    <div className="mb-5">
+        <label className="block text-slate-300 mb-2 font-medium">
+            Target Role
+        </label>
+
+        <select
+            value={targetRole}
+            onChange={(e) => setTargetRole(e.target.value)}
+            className="w-80 bg-slate-800 text-white border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500"
+        >
+            <option>Software Engineer</option>
+            <option>Frontend Developer</option>
+            <option>Backend Developer</option>
+            <option>Full Stack Developer</option>
+            <option>Data Analyst</option>
+            <option>ML Engineer</option>
+        </select>
+    </div>
+
+    {inputType === "text" && (
+        <textarea
+            placeholder="Paste your resume here..."
+            value={resumeText}
+            onChange={(e) => setResumeText(e.target.value)}
+            className="w-full h-72 bg-slate-800 rounded-xl p-4 text-white outline-none border border-slate-700"
         />
-        )}
-            {inputType === "pdf" && (
-                    <div className="mt-5">
-                        <label className="cursor-pointer inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-5 py-3 rounded-xl font-medium transition">
-                        📄 Upload Resume PDF
+    )}
 
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className="hidden"
-              />
+    {inputType === "pdf" && (
+        <div className="mt-5">
+            <label className="cursor-pointer inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-5 py-3 rounded-xl font-medium transition">
+                📄 Upload Resume PDF
+
+                <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
             </label>
 
             {resumeFile ? (
@@ -207,22 +249,26 @@ function Dashboard() {
 
             {inputType === "text" && (
                 <button
-                onClick={handleAnalyze}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold transition"
-                >
-                {loading ? "Analyzing..." : "Analyze Resume"}
-                </button>
+                    onClick={handleAnalyze}
+                    disabled={loading}
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                        loading
+                        ? "bg-blue-600 opacity-60 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                    >
+                    {loading ? "Analyzing..." : "Analyze Resume"}
+                    </button>
             )}
 
             {inputType === "pdf" && (
                 <button
-                onClick={handlePDFAnalyze}
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-semibold transition"
-                >
-                Analyze PDF
-                </button>
+                    onClick={handleAnalyzePdf}
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                    {loading ? "Analyzing PDF..." : "Analyze PDF"}
+                    </button>
             )}
 
             <button
@@ -241,6 +287,14 @@ function Dashboard() {
                 <h2 className="text-2xl font-bold mb-6">
                     ATS Score
                 </h2>
+                <p
+                    className="mt-2 text-lg font-semibold"
+                    style={{
+                        color: getRoleFitColor(analysis.roleFit),
+                    }}
+                    >
+                    Role Fit: {analysis.roleFit}
+                </p>
 
                 <div className="w-40 h-40">
                     <CircularProgressbar
@@ -253,6 +307,15 @@ function Dashboard() {
                     })}
                     />
                 </div>
+
+                <p
+                className="mt-4 text-lg font-semibold"
+                style={{
+                    color: getScoreColor(analysis.atsScore),
+                }}
+                >
+                {getScoreLabel(analysis.atsScore)}
+                </p>
                 </div>
 
             <div className="bg-slate-900 p-6 rounded-2xl shadow-xl">
@@ -278,6 +341,22 @@ function Dashboard() {
                 ))}
               </ul>
             </div>
+
+            {analysis?.missingSkills?.length > 0 && (
+            <div className="bg-slate-900 rounded-2xl p-6 shadow-xl mt-6">
+                <h3 className="text-xl font-bold mb-4 text-white">
+                Missing Skills
+                </h3>
+
+                <ul className="list-disc pl-6 space-y-2">
+                {analysis.missingSkills.map((skill, index) => (
+                    <li key={index} className="text-white leading-relaxed">
+                    {skill}
+                    </li>
+                ))}
+                </ul>
+            </div>
+            )}
 
             <div className="bg-slate-900 p-6 rounded-2xl shadow-xl">
               <h2 className="text-2xl font-bold mb-4">

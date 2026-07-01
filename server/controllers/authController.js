@@ -100,7 +100,7 @@ export const loginUser = async (req, res) => {
 
 export const analyzeResume = async (req, res) => {
   try {
-    const { resumeText } = req.body;
+    const { resumeText, targetRole } = req.body;
 
     if (!resumeText) {
       return res.status(400).json({
@@ -110,7 +110,7 @@ export const analyzeResume = async (req, res) => {
     }
 
     const analysisText =
-    await analyzeResumeWithGemini(resumeText);
+    await analyzeResumeWithGemini(resumeText, targetRole);
 
     const analysis = JSON.parse(
       analysisText.replace(/```json|```/g, "").trim()
@@ -166,7 +166,10 @@ export const analyzeResumePDF = async (req, res) => {
     const resumeText = data.text;
 
     const analysisText =
-      await analyzeResumeWithGemini(resumeText);
+    await analyzeResumeWithGemini(
+      resumeText,
+      req.body.targetRole || "Software Engineer"
+    );
 
     const analysis = JSON.parse(
       analysisText.replace(/```json|```/g, "").trim()
